@@ -54,7 +54,7 @@ app.get("/", async (req, res, next) => {
     const outTEMP = "./temp/"+Math.floor(Math.random() * ( 999999 - 100000 ) + 100000)
     fs.writeFileSync(inTEMP,text)
     const openjtalkCMD = `./openjtalk/open_jtalk -x ./openjtalk/dic -g 10 -m ${type} -r ${speed} -fm ${pitch} -ow ${outTEMP} ${inTEMP}`
-    exec(openjtalkCMD, (err, stdout, stderr) => {
+    exec(openjtalkCMD, async (err, stdout, stderr) => {
         console.log(err);
         console.log(stdout);
         console.log(`audio query => ${text} : ${type} : ${speed} : ${pitch}`);
