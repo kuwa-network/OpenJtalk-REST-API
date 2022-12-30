@@ -1,14 +1,24 @@
 const fs = require("fs")
 const { exec } = require('child_process')
 const express = require("express");
-const e = require("express");
 const app = express();
+const kLoger = require("./kloger");
+const loger = new kLoger({
+    info: true,
+    debug: true,
+    error: true 
+})
+
+// エラーハンドリング
+process.on("uncaughtException", function(err) {
+    loger.error(err)
+})
 
 const server = app.listen(21454,'0.0.0.0', () => {
-    console.log("OpenJtalk HTTP API bind on "+server.address().address+":"+ + server.address().port);
+    loger.info("OpenJtalk HTTP API bind on "+server.address().address+":"+ + server.address().port);
 });
 
-app.get("/", async (req, res, next) => {
+app.get("/synthesize", async (req, res, next) => {
     let text = req.query.text
     let type = req.query.type
     let speed = req.query.speed
@@ -54,10 +64,12 @@ app.get("/", async (req, res, next) => {
     const outTEMP = "./temp/"+Math.floor(Math.random() * ( 999999 - 100000 ) + 100000)
     fs.writeFileSync(inTEMP,text)
     const openjtalkCMD = `./openjtalk/open_jtalk -x ./openjtalk/dic -g 10 -m ${type} -r ${speed} -fm ${pitch} -ow ${outTEMP} ${inTEMP}`
-    exec(openjtalkCMD, async (err, stdout, stderr) => {
-        console.log(err);
-        console.log(stdout);
-        console.log(`audio query => ${text} : ${type} : ${speed} : ${pitch}`);
+    exec(openjtalkCMD, (err, stdout, stderr) => {
+        if (err) {
+            loger.error(err);
+            return;
+        }
+        loger.debug(`audio query => ${text} : ${type} : ${speed} : ${pitch}`);
         res.send(fs.readFileSync(outTEMP));
         fs.unlinkSync(inTEMP);
         fs.unlinkSync(outTEMP);
